@@ -1,18 +1,16 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import { HashRouter, Routes, Route } from 'react-router'
-import Home from './components/Home'
-import AboutMe from './components/AboutMe'
+import AboutMe from './components/nav/pages/AboutMe'
+import Home from './components/nav/pages/Home'
+import RoastCoach from './components/nav/pages/RoastCoach'
 
-function App() {
+export default function App() {
   return <HashRouter>
     <Routes>
-      <Route path='/' element={<Home/>}></Route>
-      <Route path='/about' element={<AboutMe/>}></Route>
+      <Route path='/' element={<RoastCoach/>}>
+          <Route index element={<Home/>}></Route>
+          <Route path='/about' element={<AboutMe/>}></Route>
+      </Route>
     </Routes>
   </HashRouter>
 }
-
-export default App
