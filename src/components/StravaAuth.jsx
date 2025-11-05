@@ -7,7 +7,7 @@ export default function StravaAuth() {
 
   // Strava OAuth configuration
   const CLIENT_ID = '180983';
-  const REDIRECT_URI = window.location.origin;
+  const REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
   const SCOPE = 'read,activity:read_all,profile:read_all';
 
   useEffect(() => {
