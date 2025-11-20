@@ -33,9 +33,9 @@ export default function RoastCoachNavbar(props) {
                         <Nav.Link as={Link} to="/" className="nav-link-custom">
                             Home
                         </Nav.Link>
-                        <Nav.Link as={Link} to="/week-review" className="nav-link-custom">
+                            {authData ? <Nav.Link as={Link} to="/week-review" className="nav-link-custom">
                             Week in Roasts
-                        </Nav.Link>
+                        </Nav.Link> : <></>}
                         <Nav.Link as={Link} to="/about" className="nav-link-custom">
                             About
                         </Nav.Link>
