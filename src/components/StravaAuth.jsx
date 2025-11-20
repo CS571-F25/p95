@@ -1,14 +1,24 @@
 import { useState, useEffect, useContext } from 'react';
 import StravaLoginStatusContext from '../contexts/StravaLoginStatusContext';
+import { Button, Container, Modal } from 'react-bootstrap';
 
-export default function StravaAuth() {
+export default function StravaAuth(props) {
   const { authData, setAuthData } = useContext(StravaLoginStatusContext);
   const [loading, setLoading] = useState(false);
+
+  const [show, setShow] = useState(true);
+
+  const handleClose = () => {
+    setAuthData("")
+    setShow(false);
+    props.setLoginVisible(false);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  };
 
   // Strava OAuth configuration
   const CLIENT_ID = '180983';
   const REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
-  const SCOPE = 'read,activity:read_all,profile:read_all';
+  const SCOPE = 'read,activity:read_all,profile:read_all,activity:write';
 
   useEffect(() => {
     // Check if returning from Strava with auth code
@@ -57,16 +67,12 @@ export default function StravaAuth() {
           setAuthData(data);
           
           window.history.replaceState({}, document.title, window.location.pathname);
-
+          props.setLoginVisible(false);
       } catch (err) {
           console.error('Token exchange error:', err);
       } finally {
           setLoading(false);
       }
-  };
-
-  const handleLogout = () => {
-    setAuthData(null);
   };
 
   if (loading) {
@@ -80,54 +86,47 @@ export default function StravaAuth() {
     );
   }
 
-  if (authData) {
-    return (
-      <div>
-        <div>
-          <div>
-            <h1>Successfully Connected!</h1>
-            <p>You're logged in to Strava</p>
-          </div>
-
-          <div>
-            <h2>Athlete Info</h2>
-            <p>
-              Name: {authData.athlete?.firstname} {authData.athlete?.lastname}
-            </p>
-          </div>
-
-          <button
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <div>
-        <div>
-          <div>
-            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+    <Modal
+      show={show} 
+      onHide={handleClose}
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Body>
+        <Container style={{textAlign:"center"}}>
+          <Container>
+            <h4>Connect to Strava</h4>
+            <p>Authenticate your Strava account to continue</p>
+          </Container>
+          <Button
+            onClick={handleLogin}
+            style={{
+              backgroundColor:"#FC4C02", 
+              borderColor: "#FC4C02",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              margin: "0 auto"
+            }}
+          >
+            <svg 
+              style={{width: "20px", height: "20px"}} 
+              fill="currentColor" 
+              viewBox="0 0 24 24"
+            >
               <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
             </svg>
-          </div>
-          <h1>Connect to Strava</h1>
-          <p>Authenticate your Strava account to continue</p>
-        </div>
-
-        <button
-          onClick={handleLogin}
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-          </svg>
-          Connect with Strava
-        </button>
-      </div>
-    </div>
+            Connect with Strava
+          </Button>
+        </Container>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
