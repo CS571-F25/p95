@@ -1,8 +1,9 @@
+import StravaLoginStatusContext from "../context/StravaLoginStatusContext";
+import StravaRoastActivityCard from "../components/StravaRoastActivityCard";
 import { useContext, useEffect, useState } from 'react';
-import StravaLoginStatusContext from '../../../contexts/StravaLoginStatusContext';
-import StravaActivitiesPage from '../../content/StravaActivitiesPage';
+import { Spinner } from "react-bootstrap";
 
-export default function Home(props) {
+export default function StravaActivitiesPage() {
     const { authData } = useContext(StravaLoginStatusContext);
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -36,22 +37,23 @@ export default function Home(props) {
     }, [authData]);
 
     if (loading) {
-        return <h1>Loading...</h1>;
-    }
-
-    if (activities.length > 0 && authData) {
-        return <StravaActivitiesPage activities={activities} authData={authData} />;
+        return <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+        </Spinner>;
     }
 
     return (
-        <div className="text-center mt-5">
-            <h1 className="display-4 fw-bold">Welcome to The Roast Coach</h1>
-            <p className="lead mt-3">
-            You're not logged in…which means I can't roast your athletic performance
-            </p>
-            <p className="text-muted">
-            Go ahead, login. I promise to go easy on you (Probably)
-            </p>
-        </div>
-    );
+    <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center',
+        gap: '24px',
+        width: '100%' 
+    }}>
+        {activities.map(x => (
+            <StravaRoastActivityCard key={x.id} {...x} />
+        ))}
+    </div>
+);
+
 }

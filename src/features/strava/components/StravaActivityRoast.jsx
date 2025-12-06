@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import { formatTime } from '../../../utils'
 
 export default function StravaActivityRoast(props) {
     const [roast, setActivityRoast] = useState("");
@@ -11,55 +12,88 @@ export default function StravaActivityRoast(props) {
     }, []);
 
     async function loadOrGenerateRoast() {
-        await generateAIRoast();
+        // Try to load from localStorage first
+        const cachedRoast = loadRoastFromCache(props.id);
+        
+        if (cachedRoast) {
+            setActivityRoast(cachedRoast);
+        } else {
+            // Generate new roast if not in cache
+            await generateAIRoast();
+        }
+    }
+
+    function loadRoastFromCache(activityId) {
+        try {
+            const cacheKey = `strava_roast_${activityId}`;
+            const cached = localStorage.getItem(cacheKey);
+            
+            if (!cached) return null;
+            
+            // Parse the cached data
+            const cacheData = JSON.parse(cached);
+            
+            return cacheData.roast;
+        } catch (err) {
+            console.error('Error reading from localStorage:', err);
+            return null;
+        }
+    }
+
+    function saveRoastToCache(activityId, roastText) {
+        try {
+            const cacheKey = `strava_roast_${activityId}`;
+            const cacheData = {
+                roast: roastText,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        } catch (err) {
+            console.error('Error saving to localStorage:', err);
+        }
     }
 
     async function generateAIRoast() {
         setLoading(true);
         setError(null);
-
-        setActivityRoast("This is a roast");
-        setLoading(false);
         
-        // try {
-        //     const pace = props.moving_time / (props.distance / 1000);
-        //     const paceMin = Math.floor(pace / 60);
-        //     const paceSec = Math.floor(pace % 60);
+        try {
+            const intensityLevel = "spicy and savage";
             
-        //     const intensityLevel = "spicy and savage";
+            const prompt = buildRoastPrompt(props, intensityLevel);
+
+            const response = await fetch('https://strava-backend-eight.vercel.app/api/claude', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: [
+                        { role: 'user', content: prompt }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
             
-        //     const prompt = buildRoastPrompt(props, intensityLevel);
-
-        //     const response = await fetch('https://strava-backend-eight.vercel.app/api/claude', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             messages: [
-        //                 { role: 'user', content: prompt }
-        //             ]
-        //         })
-        //     });
-
-        //     const data = await response.json();
-
-        //     if (!response.ok) {
-        //         throw new Error(`API Error: ${response.status}`);
-        //     }
-            
-        //     if (data.content && data.content[0]) {
-        //         const newRoast = data.content[0].text;
-        //         setActivityRoast(newRoast);
-        //     } else {
-        //         throw new Error("No response from AI");
-        //     }
-        // } catch (err) {
-        //     console.error("AI roast generation failed:", err);
-        //     setError("Failed to generate roast. Please check your API key and try again.");
-        // } finally {
-        //     setLoading(false);
-        // }
+            if (data.content && data.content[0]) {
+                const newRoast = data.content[0].text;
+                setActivityRoast(newRoast);
+                // Save to cache after successful generation
+                saveRoastToCache(props.id, newRoast);
+            } else {
+                throw new Error("No response from AI");
+            }
+        } catch (err) {
+            console.error("AI roast generation failed:", err);
+            setError("Failed to generate roast. Please check your API key and try again.");
+        } finally {
+            setLoading(false);
+        }
     }
 
     function buildRoastPrompt(props, intensityLevel) {
@@ -147,17 +181,17 @@ export default function StravaActivityRoast(props) {
         // Build the prompt
         return `You are a witty Strava activity roaster. Create a funny, ${intensityLevel} roast for this ${activityType} activity titled "${activityName}".
 
-    **Activity Stats:**
-    ${metrics.join('\n')}
+        **Activity Stats:**
+        ${metrics.join('\n')}
 
-    ${context.length > 0 ? `**Additional Context:**\n${context.join('\n')}` : ''}
+        ${context.length > 0 ? `**Additional Context:**\n${context.join('\n')}` : ''}
 
-    **Instructions:**
-    - Keep it 1-2 sentences maximum
-    - Be sharp, creative, and specific to the stats
-    - Focus on the most roast-worthy aspect (slow pace, excessive breaks, flat route, low effort, etc.)
-    - Make it funny but not mean-spirited
-    - Reference specific numbers when they're embarrassing or impressive`;
+        **Instructions:**
+        - Keep it 1-2 sentences maximum
+        - Be sharp, creative, and specific to the stats
+        - Focus on the most roast-worthy aspect (slow pace, excessive breaks, flat route, low effort, etc.)
+        - Make it funny but not mean-spirited
+        - Reference specific numbers when they're embarrassing or impressive`;
     }
 
     async function sendRoastToStrava() {
@@ -172,17 +206,13 @@ export default function StravaActivityRoast(props) {
                     refresh_token: authData.refresh_token
                 })
             });
-
-            console.log('Refresh response status:', refreshResponse.status);
             
             if (!refreshResponse.ok) {
                 const errorData = await refreshResponse.json();
-                console.error('Refresh error:', errorData);
                 throw new Error('Failed to refresh token: ' + JSON.stringify(errorData));
             }
 
             const refreshData = await refreshResponse.json();
-            console.log('Refresh successful:', refreshData);
             
             const newAccessToken = refreshData.access_token;
 
@@ -204,63 +234,87 @@ export default function StravaActivityRoast(props) {
                 })
             });
 
-            console.log('Update response status:', response.status);
-
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Update error:', errorData);
                 throw new Error(errorData.message || 'Failed to update activity');
             }
 
             setStravaSent(true);
-            console.log('Activity updated successfully!');
 
         } catch (err) {
             console.error('Error updating Strava activity:', err);
         }
     }
 
-    const formatTime = (seconds) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        
-        if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
-    };
+    return <div style={styles.roastBox}>
+        <div style={styles.roastContent}>
+            <div style={{ flex: 1 }}>
+                <div style={styles.roastLabel}>
+                    <span>AI Roast</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {!loading && (
+                            <button
+                                disabled={stravaSent}
+                                onClick={sendRoastToStrava}
+                                style={styles.stravaButton}
+                            >
+                                Send to Strava
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-    return <div>
-        {loading && <p style={{ fontStyle: 'italic', color: '#666' }}>🔥 Generating roast...</p>}
-        {error && ( <p style={{ color: '#e74c3c', marginTop: '10px' }}>{error}</p> )}
-        {roast ? <p style={{ 
-            fontStyle: 'italic', 
-            marginTop: '10px', 
-            color: '#d35400',
-            padding: '10px',
-            backgroundColor: '#fff3cd',
-            borderRadius: '4px',
-            borderLeft: '4px solid #d35400'
-        }}>
-            {roast}
-        </p> : <></>}
-        <div>
-            {!loading ?
-                <button disabled={stravaSent}
-                    onClick={sendRoastToStrava}
-                    style={{
-                        marginTop: '8px',
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        backgroundColor: 'white',
-                        cursor: 'pointer'
-                    }}
-                >
-                Send to Strava
-            </button> : <></>}
+                {loading && <p style={{ fontStyle: 'italic', color: '#666' }}>🔥 Generating roast...</p>}
+                {error && <p style={{ color: 'white', marginTop: '10px' }}>{error}</p>}
+                {roast && <p style={styles.roastText}>{roast}</p>}
+            </div>
         </div>
-    </div>
+    </div>;
 }
+
+const styles = {
+    roastBox: {
+        background: 'linear-gradient(to right, #fff7ed, #fef2f2)',
+        borderRadius: '12px',
+        padding: '16px',
+        border: '2px solid #fed7aa'
+    },
+    roastContent: {
+        display: 'flex',
+        gap: '12px',
+        alignItems: 'flex-start'
+    },
+    roastLabel: {
+        fontSize: '10px',
+        fontWeight: 'bold',
+        color: '#ea580c',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        marginBottom: '8px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    roastText: {
+        color: '#374151',
+        fontSize: '14px',
+        lineHeight: '1.6',
+        fontStyle: 'italic'
+    },
+    stravaButton: {
+        padding: '6px 12px',
+        fontSize: '12px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        backgroundColor: 'white',
+        cursor: 'pointer'
+    },
+    regenerateButton: {
+        padding: '6px 10px',
+        fontSize: '12px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        backgroundColor: 'white',
+        cursor: 'pointer'
+    }
+};
