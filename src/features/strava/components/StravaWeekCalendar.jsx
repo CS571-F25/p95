@@ -1,15 +1,14 @@
 import { useState, useEffect, useContext } from 'react';
-import { Col, Row, Container, Button } from 'react-bootstrap';
+import { Col, Row, Container } from 'react-bootstrap';
 import StravaLoginStatusContext from '../context/StravaLoginStatusContext';
 import StravaActivityCard from './StravaActivityCard';
 import { useWeek } from '../../weekInRoasts/context/WeekContext';
 
-export default function StravaWeekCalendar({onWeekActivitiesChange, onCurrentStartOfWeekChanged}) {
+export default function StravaWeekCalendar() {
     const { authData } = useContext(StravaLoginStatusContext);
+    const { currentWeek, loading, getWeek } = useWeek();
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [weekRange, setWeekRange] = useState({start_date: null, end_date: null});
-    const {weekActivities, setWeekActivities, setStartOfWeek} = useWeek();
+    const [weekRange, setWeekRange] = useState({ start_date: null, end_date: null });
 
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -53,11 +52,11 @@ export default function StravaWeekCalendar({onWeekActivitiesChange, onCurrentSta
     };
 
     const getActivitiesForDay = (dayName) => {
-        if(daysOfWeek.length === 0) return [];
+        if (!currentWeek?.activities) return [];
 
         const dayIndex = daysOfWeek.indexOf(dayName);
 
-        return weekActivities.filter(activity => {
+        return currentWeek.activities.filter(activity => {
             const activityDate = new Date(activity.start_date);
             return activityDate.getDay() === dayIndex;
         });
@@ -66,7 +65,7 @@ export default function StravaWeekCalendar({onWeekActivitiesChange, onCurrentSta
     useEffect(() => {
         const initialRange = getWeekRange(currentWeekOffset);
         setWeekRange(initialRange);
-        getActivitiesForWeek(initialRange);
+        getWeek(initialRange.weekStart);
     }, []);
 
     const changeWeek = (offset) => {
@@ -75,41 +74,13 @@ export default function StravaWeekCalendar({onWeekActivitiesChange, onCurrentSta
 
         setCurrentWeekOffset(newOffset);
         setWeekRange(newWeekRange);
-        setStartOfWeek(newWeekRange.start_date);
-        getActivitiesForWeek(newWeekRange);
+        getWeek(newWeekRange.weekStart);
     };
-
-    async function getActivitiesForWeek(range) {
-        if (!range) return;
-        try {
-            setLoading(true);
-
-            const start = Math.floor(new Date(range.start_date).getTime() / 1000);
-            const end = Math.floor(new Date(range.end_date).getTime() / 1000);
-
-            const res = await fetch(
-                `https://www.strava.com/api/v3/athlete/activities?before=${end}&after=${start}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${authData.access_token}`
-                    }
-                }
-            );
-
-            const data = await res.json();
-            setWeekActivities(data);
-        } catch (err) {
-            console.error('Error fetching activities:', err);
-        } finally {
-            setLoading(false);
-        }
-    }
 
     const isSameDate = (d1, d2) =>
         d1.getFullYear() === d2.getFullYear() &&
         d1.getMonth() === d2.getMonth() &&
         d1.getDate() === d2.getDate();
-
 
     return (
         <div style={styles.container}>
@@ -155,9 +126,9 @@ export default function StravaWeekCalendar({onWeekActivitiesChange, onCurrentSta
                             <h2 style={styles.dayHeader}>{day}</h2>
                             {loading ? (
                                 <p style={styles.loading}>Loading...</p>
-                            ) : (weekActivities.length > 0 && getActivitiesForDay(day).length > 0 ) ?
+                            ) : (currentWeek?.activities.length > 0 && getActivitiesForDay(day).length > 0) ?
                                 getActivitiesForDay(day).map(activity => (
-                                    <StravaActivityCard {...activity} />
+                                    <StravaActivityCard key={activity.id} {...activity} />
                                 ))
                             : (
                                 <p style={styles.emptyState}>No activities</p>

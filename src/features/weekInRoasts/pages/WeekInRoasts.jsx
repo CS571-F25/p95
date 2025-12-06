@@ -1,21 +1,25 @@
+import { useContext } from "react";
 import StravaWeekCalendar from "../../strava/components/StravaWeekCalendar";
 import WeekInRoastsRoast from "../components/WeekInRoastsRoast";
 import { WeekProvider } from "../context/WeekContext";
+import StravaLoginStatusContext from "../../strava/context/StravaLoginStatusContext";
 
 export default function WeekInRoasts() {
+  const { authData } = useContext(StravaLoginStatusContext);
+
   return (
     <div style={styles.container}>
-        <WeekProvider>
-          <div style={styles.pageContent}>
-            <div style={styles.section}>
-              <WeekInRoastsRoast />
-            </div>
-
-            <div style={styles.section}>
-              <StravaWeekCalendar />
-            </div>
+      <WeekProvider authData={authData}>
+        <div style={styles.pageContent}>
+          <div style={styles.section}>
+            <WeekInRoastsRoast />
           </div>
-        </WeekProvider>
+
+          <div style={styles.section}>
+            <StravaWeekCalendar />
+          </div>
+        </div>
+      </WeekProvider>
     </div>
   );
 }

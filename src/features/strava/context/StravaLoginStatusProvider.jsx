@@ -8,7 +8,7 @@ export default function StravaLoginStatusProvider({ children }) {
     setAuthData(data);
 
     if (data.athlete?.firstname && data.athlete?.lastname) {
-      await generateRoastName(data.athlete.firstname, data.athlete.lastname);
+      await generateRoastName(data);
     }
   };
 
@@ -19,10 +19,50 @@ export default function StravaLoginStatusProvider({ children }) {
   const [roastName, setRoastName] = useState(null);
   const [generatingRoast, setGeneratingRoast] = useState(false);
 
-  const generateRoastName = async (firstName, lastName) => {
+  const generateRoastName = async (data) => {
+
+    const result = localStorage.getItem(`${data.athlete.id}_username`, false);
+    if (result && !result.endsWith("The Legend")) {
+      const username = result;
+      setRoastName(username);
+      return;
+    }
+
+    const firstName = data.athlete.firstname;
+    const lastName = data.athlete.firstname;
+
     setGeneratingRoast(true);
     try {
-      const prompt = `Create a funny, playful roast nickname for an athlete named ${firstName} ${lastName}. Make it witty but not mean-spirited. Return ONLY the nickname, nothing else.`
+      const prompt = `You're a witty gym buddy creating a playful roast nickname for athlete ${firstName} ${lastName}.
+
+      FORMAT OPTIONS (choose the best fit):
+      1. "[Roast Adjective] [LastName]" - e.g., "Half-Rep Martinez", "Quarter-Squat Johnson"
+      2. "[Roast Phrase] [FirstName]" - e.g., "Cardio-Only Chris", "Skip-Day Sarah"
+      3. "[FirstName] [Roast Surname Pun]" - e.g., "Mike Jog-son", "Brad Tread-mills"
+
+      ROAST VOCABULARY (use these types of terms):
+      - Incomplete effort: Half-Rep, Quarter-Squat, Almost, Kinda, Maybe
+      - Avoidance: Skip-Day, Rest-Day, No-Show, Ghost
+      - Low intensity: Light-Weight, Easy-Mode, Casual, Zone-Two
+      - Slow pace: Slow-Mo, Turtle-Pace, Stroll
+      - Poor form: Bad-Form, Wobbly, Shaky
+
+      RULES:
+      - Maximum 3 words total
+      - Must include their actual first OR last name
+      - Playful and teasing, not mean
+      - Gym/fitness humor focused
+
+      GOOD EXAMPLES:
+      "Half-Rep Rodriguez"
+      "Quarter-Squat Williams"  
+      "Skip-Day Sarah"
+      "Light-Weight Lopez"
+      "Cardio-Only Chris"
+      "Maybe-Tomorrow Mike"
+
+      Now create ONE perfect roast nickname for ${firstName} ${lastName}.
+      Return ONLY the 3-word nickname. No quotes. No explanation.`;
 
       const response = await fetch('https://strava-backend-eight.vercel.app/api/claude', {
           method: 'POST',
@@ -36,9 +76,12 @@ export default function StravaLoginStatusProvider({ children }) {
           })
       });
 
-      const data = await response.json();
-      const nickname = data.content[0].text.trim();
+      const roast = await response.json();
+      const nickname = roast.content[0].text.trim();
       setRoastName(nickname);
+
+      localStorage.setItem(`${data.athlete.id}_username`, nickname)
+
       return nickname;
     } catch (error) {
       console.error("Failed to generate roast name:", error);

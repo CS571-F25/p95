@@ -8,12 +8,17 @@ import StravaLoginStatusContext from '../../strava/context/StravaLoginStatusCont
 export default function RoastCoachNavbar({setLoginVisible}) {
     const { authData, setAuthData, roastName, generatingRoast } = useContext(StravaLoginStatusContext);
     const navigation = useNavigate();
-    const [userName, setUserName] = useState("Athlete");
+    const [userName, setUserName] = useState("");
 
     useEffect(() => {
-        const tempName = (roastName && !generatingRoast) ? roastName : `${authData.athlete.firstname} ${authData.athlete.lastname}`;
-        setUserName(tempName);
-    }, [authData])
+        if (!authData) return;
+
+        const tempName = (roastName && !generatingRoast)
+            ? roastName
+            : `${authData.athlete.firstname} ${authData.athlete.lastname}`;
+
+            setUserName(tempName);
+    }, [authData, roastName, generatingRoast]);
 
     return (
         <Navbar bg="dark" variant="dark" sticky="top" expand="sm" collapseOnSelect>
