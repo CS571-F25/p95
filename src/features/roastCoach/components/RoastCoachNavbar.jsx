@@ -10,9 +10,12 @@ export default function RoastCoachNavbar({setLoginVisible}) {
     const navigation = useNavigate();
     const [userName, setUserName] = useState("");
 
+    // Sets the visible user name on the nav bar
     useEffect(() => {
         if (!authData) return;
 
+        // Name is either a generated roast name from StravaLoginStatusContext or 
+        // the users strava first and last name
         const tempName = (roastName && !generatingRoast)
             ? roastName
             : `${authData.athlete.firstname} ${authData.athlete.lastname}`;

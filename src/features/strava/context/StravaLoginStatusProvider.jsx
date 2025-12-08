@@ -5,12 +5,27 @@ export default function StravaLoginStatusProvider({ children }) {
   const [authData, setAuthData] = useState(null);
 
   const login = async (data) => {
-    setAuthData(data);
+    let nextAuth;
 
-    if (data.athlete?.firstname && data.athlete?.lastname) {
-      await generateRoastName(data);
+    // Compute state synchronously
+    setAuthData((prev) => {
+      nextAuth = {
+        ...prev,
+        ...data,
+        athlete: data.athlete ?? prev.athlete,
+      };
+
+      localStorage.setItem('auth_data', JSON.stringify(nextAuth));
+
+      return nextAuth;
+    });
+
+    // Do async side-effects AFTER state update
+    if (nextAuth?.athlete?.firstname && nextAuth?.athlete?.lastname) {
+      await generateRoastName(nextAuth);
     }
   };
+
 
   const logout = () => {
     setAuthData(null);
@@ -91,21 +106,61 @@ export default function StravaLoginStatusProvider({ children }) {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     const checkSavedAuth = async () => {
       try {
-        const result = localStorage.getItem('auth_data', false);
+        const result = localStorage.getItem('auth_data');
         if (result) {
-          const authData = JSON.parse(result);
-          await login(authData);
+          let authData = JSON.parse(result);
+          setAuthData(authData)
+          
+          // Check if token is expired get new authentication
+          const EXPIRY_BUFFER_MS = 2 * 60 * 1000; // 2 minutes early to avoid edge case
+
+          if (authData.expires_at && Date.now() > authData.expires_at * 1000 - EXPIRY_BUFFER_MS) {
+            localStorage.removeItem('auth_data');
+
+            if (authData.refresh_token) {
+              authData = await refreshAuth(authData.refresh_token);
+            }
+          }
+
+          if(authData) {
+            await login(authData);
+          }
         }
       } catch (error) {
-        console.log('No saved auth data');
+        console.log('Auth validation failed:', error);
+        localStorage.removeItem('auth_data');
       }
     };
     
     checkSavedAuth();
   }, []);
+
+  async function refreshAuth(refreshToken) {
+    const BACKEND_URL = 'https://strava-backend-eight.vercel.app/api/strava';
+
+    try {
+      const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(`Token exchange failed: ${response.status} - ${errorData.error || errorData.message}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+
+    return null;
+  }
 
   return (
     <StravaLoginStatusContext.Provider 

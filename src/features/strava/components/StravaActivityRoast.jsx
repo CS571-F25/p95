@@ -11,6 +11,10 @@ export default function StravaActivityRoast(props) {
         loadOrGenerateRoast();
     }, []);
 
+    /**
+     * Handles getting a roast for an activity either through
+     * localStorage or generating a new one
+     */
     async function loadOrGenerateRoast() {
         // Try to load from localStorage first
         const cachedRoast = loadRoastFromCache(props.id);
@@ -23,6 +27,11 @@ export default function StravaActivityRoast(props) {
         }
     }
 
+    /**
+     * Returns roast from cache if available
+     * @param activityId id of activity to find in cache
+     * @returns Roast associated with cache
+     */
     function loadRoastFromCache(activityId) {
         try {
             const cacheKey = `strava_roast_${activityId}`;
@@ -40,6 +49,11 @@ export default function StravaActivityRoast(props) {
         }
     }
 
+    /**
+     * Saves roast to cache with unique key
+     * @param activityId id of activity used for unique key
+     * @param roastText roast to be saved with activityId
+     */
     function saveRoastToCache(activityId, roastText) {
         try {
             const cacheKey = `strava_roast_${activityId}`;
@@ -53,14 +67,16 @@ export default function StravaActivityRoast(props) {
         }
     }
 
+    /**
+     * Generates an AI roast using Claude API from Vercel
+     */
     async function generateAIRoast() {
         setLoading(true);
         setError(null);
         
         try {
-            const intensityLevel = "spicy and savage";
-            
-            const prompt = buildRoastPrompt(props, intensityLevel);
+            const intensity = getIntensityLevel();
+            const prompt = buildRoastPrompt(intensity);
 
             const response = await fetch('https://strava-backend-eight.vercel.app/api/claude', {
                 method: 'POST',
@@ -96,7 +112,28 @@ export default function StravaActivityRoast(props) {
         }
     }
 
-    function buildRoastPrompt(props, intensityLevel) {
+    function getIntensityLevel() {
+        let storedValue = localStorage.getItem('heatLevel');
+
+        return storedValue ?? 3;
+    }
+
+    /**
+     * Builds roast type according to intensity level and data provided for the activity
+     * @param intensityLevel is how intensse Claude should make the roast
+     * @returns 
+     */
+    function buildRoastPrompt(heatLevel) {
+        const intensity = {
+            1: "lighthearted and playful",
+            2: "moderately spicy and cheeky",
+            3: "boldly sarcastic and edgy",
+            4: "savage and ruthlessly funny",
+            5: "absolutely unhinged and chaotic"
+        };
+
+        const intensityLevel = intensity[heatLevel];
+
         const metrics = [];
         const context = [];
 
@@ -194,6 +231,10 @@ export default function StravaActivityRoast(props) {
         - Reference specific numbers when they're embarrassing or impressive`;
     }
 
+    /**
+     * Sends a roast to strava as a description
+     * @returns 
+     */
     async function sendRoastToStrava() {
         if (!roast) return;
 

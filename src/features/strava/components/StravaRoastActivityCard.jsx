@@ -52,9 +52,12 @@ export default function StravaRoastActivityCard(props) {
   );
 }
 
+const isMobile = window.innerWidth <= 768;
+
+
 const styles = {
   card: {
-    maxWidth: '50%',
+    maxWidth: isMobile ? '100%' : '50%',
     width: '100%',
     margin: '0 bottom',
     backgroundColor: 'white',

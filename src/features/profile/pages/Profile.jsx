@@ -1,39 +1,17 @@
-import { useState, useEffect, useContext } from 'react';
-import { Button, Container } from 'react-bootstrap';
-import StravaLoginStatusContext from '../../strava/context/StravaLoginStatusContext';
+import { Container, Card } from "react-bootstrap";
+import UserHeatSelector from "../components/UserHeatSelector";
 
 export default function Profile() {
-  const [heatLevel, setHeatLevel] = useState(3);
-  const { authData } = useContext(StravaLoginStatusContext);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('roastCoachHeat');
-    if (saved) {
-      setHeatLevel(parseInt(saved));
-    }
-  }, []);
-
-  const handleHeatChange = (level) => {
-    setHeatLevel(level);
-    localStorage.setItem('roastCoachHeat', level.toString());
-  };
-
-  const handleClear = () => {
-    handleHeatChange(3);
-  };
-
   return (
-    <Container>
-      <h2>User Preferences</h2>
-
-      
-
-      {/* Clear Button */}
-      <Button
-        onClick={handleClear}
+    <Container className="d-flex justify-content-center mt-5">
+      <Card
+        className="p-4 shadow-sm"
+        style={{ maxWidth: "450px", width: "100%", borderRadius: "15px" }}
       >
-        Clear
-      </Button>
+        <h3 className="text-center mb-2">User Preferences</h3>
+        {/* Heat Level */}
+        <UserHeatSelector />
+      </Card>
     </Container>
   );
 }

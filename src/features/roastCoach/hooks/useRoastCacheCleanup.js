@@ -9,6 +9,7 @@ function cleanupExpiredRoastCache() {
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             
+            // Removes expired roasts 30 days or older since they are unlikely to be used again
             if (key && key.startsWith('strava_roast_') || key.startsWith('strava_week_roast_')) {
                 try {
                     const cached = localStorage.getItem(key);

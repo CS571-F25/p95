@@ -9,7 +9,9 @@ export default function RoastCoach() {
     const [loginVisible, setLoginVisible] = useState(true);
     const { authData } = useStravaAuth();
 
+    // Cleans up existing data if needed to limit likely unused data in local storage
     useRoastCacheCleanup();
+
     return (
         <div style={{
             minHeight: "100vh",
@@ -17,6 +19,7 @@ export default function RoastCoach() {
             display: "flex",
             flexDirection: "column"
         }}>
+            {/* Nav Bar */}
             <RoastCoachNavbar setLoginVisible={setLoginVisible} />
             <div style={{
                 display: "flex",
@@ -26,9 +29,11 @@ export default function RoastCoach() {
                 width: "100%",
                 flex: 1
             }}>
+                {/* Shows Login Visible if the user selects login and there is not auth data */}
                 {loginVisible && !authData ? (
                     <StravaAuth setLoginVisible={setLoginVisible} />
                 ) : null}
+
                 <Outlet />
             </div>
         </div>

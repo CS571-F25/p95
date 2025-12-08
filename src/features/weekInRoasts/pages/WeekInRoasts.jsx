@@ -28,6 +28,7 @@ const styles = {
   container: {
     background: 'linear-gradient(to bottom right, #fff7ed, #fef2f2)',
     minHeight: '100vh',
+    minWidth: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   pageContent: {
