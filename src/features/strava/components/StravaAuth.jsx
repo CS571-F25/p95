@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import { useStravaAuth } from '../context/StravaLoginStatusContext';
 import { Button, Container, Modal, Spinner } from 'react-bootstrap';
 
-export default function StravaAuth(props) {
+export default function StravaAuth({setLoginVisible}) {
   const { authData, login, logout } = useStravaAuth();
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(true);
 
   const handleClose = () => {
-    logout();
     setShow(false);
-    props.setLoginVisible(false);
+    setLoginVisible(false);
     window.history.replaceState({}, document.title, window.location.pathname);
   };
 
@@ -71,7 +70,7 @@ export default function StravaAuth(props) {
       login(data);
       
       window.history.replaceState({}, document.title, window.location.pathname);
-      props.setLoginVisible(false);
+      setLoginVisible(false);
     } catch (error) {
       console.error('Login error:', error);
     }

@@ -6,7 +6,7 @@ import poweredByStrava from "../../../assets/strava_logo.svg";
 import StravaLoginStatusContext from '../../strava/context/StravaLoginStatusContext';
 
 export default function RoastCoachNavbar({setLoginVisible}) {
-    const { authData, setAuthData, roastName, generatingRoast } = useContext(StravaLoginStatusContext);
+    const { authData, logout, roastName, generatingRoast } = useContext(StravaLoginStatusContext);
     const navigation = useNavigate();
     const [userName, setUserName] = useState("");
 
@@ -38,25 +38,35 @@ export default function RoastCoachNavbar({setLoginVisible}) {
                     <span className="fw-semibold">Roast Coach</span>
                 </Navbar.Brand>
 
+                {/* Strava Logo - Desktop only */}
+                <img
+                    src={poweredByStrava}
+                    alt="Powered by Strava API"
+                    height="20"
+                    className="opacity-75 d-none d-sm-block ms-auto me-2"
+                />
+
                 {/* Toggle for mobile */}
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
 
                 {/* Collapsible Nav */}
-                <Navbar.Collapse id="responsive-navbar-nav">
-                    <Nav className="me-auto">
+                <Navbar.Collapse id="responsive-navbar-nav" className="px-2 px-sm-0">
+                    <Nav className="me-auto mt-2 mt-sm-0">
                         <Nav.Link as={Link} to="/" className="nav-link-custom">
                             Home
                         </Nav.Link>
-                            {authData ? <Nav.Link as={Link} to="/week-review" className="nav-link-custom">
-                            Week in Roasts
-                        </Nav.Link> : <></>}
+                        {authData ? (
+                            <Nav.Link as={Link} to="/week-review" className="nav-link-custom">
+                                Week in Roasts
+                            </Nav.Link>
+                        ) : null}
                         <Nav.Link as={Link} to="/about" className="nav-link-custom">
                             About
                         </Nav.Link>
                     </Nav>
 
                     {/* Right side */}
-                    <Nav className="align-items-center">
+                    <Nav className="align-items-sm-center mt-2 mt-sm-0">
                         {userName ? (
                             <NavDropdown
                                 align="end"
@@ -65,31 +75,34 @@ export default function RoastCoachNavbar({setLoginVisible}) {
                                         {userName}
                                     </span>
                                 }
-                                className="me-3"
+                                className="mb-2 mb-sm-0"
                             >
-                                <NavDropdown.Item as={Link} to="/profile" >Profile</NavDropdown.Item>
+                                <NavDropdown.Item as={Link} to="/profile">Profile</NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => {
-                                    setAuthData(null),
-                                    navigation("/")
+                                    logout();
+                                    setUserName(null);
+                                    navigation("/");
                                 }}>Sign Out</NavDropdown.Item>
                             </NavDropdown>
                         ) : (
                             <Button
                                 variant="outline-light"
-                                className="me-3"
+                                className="mb-2 mb-sm-0"
                                 onClick={() => setLoginVisible(true)}
                             >
                                 Login
                             </Button>
                         )}
 
-                        {/* Strava Logo */}
-                        <img
-                            src={poweredByStrava}
-                            alt="Powered by Strava API"
-                            height="20"
-                            className="opacity-75"
-                        />
+                        {/* Strava Logo - Mobile only */}
+                        <div className="d-sm-none text-center mt-3 mb-2">
+                            <img
+                                src={poweredByStrava}
+                                alt="Powered by Strava API"
+                                height="16"
+                                className="opacity-75"
+                            />
+                        </div>
                     </Nav>
                 </Navbar.Collapse>
             </Container>

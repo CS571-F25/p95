@@ -28,7 +28,24 @@ export default function StravaLoginStatusProvider({ children }) {
 
 
   const logout = () => {
+    const tempAuth = authData;
     setAuthData(null);
+    setRoastName(null);
+    localStorage.removeItem("auth_data");
+    localStorage.removeItem(`${tempAuth.athlete.id}_username`);
+    localStorage.removeItem(`heatLevel`);
+
+    const keysToRemove = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+
+        if (key && key.startsWith('strava_roast_') || key.startsWith('strava_week_roast_')) {
+              keysToRemove.push(key);
+        }
+    }
+        
+    keysToRemove.forEach(key => localStorage.removeItem(key));
   };
 
   const [roastName, setRoastName] = useState(null);

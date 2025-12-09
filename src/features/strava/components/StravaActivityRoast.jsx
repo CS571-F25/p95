@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react"
 import { formatTime } from '../../../utils'
+import { useStravaAuth } from "../context/StravaLoginStatusContext";
 
 export default function StravaActivityRoast(props) {
     const [roast, setActivityRoast] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [stravaSent, setStravaSent] = useState(false);
+    const { authData } = useStravaAuth();
 
     useEffect(() => {
         loadOrGenerateRoast();
@@ -236,42 +238,17 @@ export default function StravaActivityRoast(props) {
      * @returns 
      */
     async function sendRoastToStrava() {
-        if (!roast) return;
+        if (!roast || !authData) return;
 
         try {
-            // First, refresh the access token
-            const refreshResponse = await fetch('https://strava-backend-eight.vercel.app/api/strava', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    refresh_token: authData.refresh_token
-                })
-            });
-            
-            if (!refreshResponse.ok) {
-                const errorData = await refreshResponse.json();
-                throw new Error('Failed to refresh token: ' + JSON.stringify(errorData));
-            }
-
-            const refreshData = await refreshResponse.json();
-            
-            const newAccessToken = refreshData.access_token;
-
-            // Update authData with new token
-            setAuthData({
-                ...authData,
-                access_token: newAccessToken,
-                refresh_token: refreshData.refresh_token
-            });
-
             // Now update the activity with the fresh token
             const response = await fetch('https://strava-backend-eight.vercel.app/api/strava', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    access_token: newAccessToken,
+                    access_token: authData.access_token,
                     id: props.id,
-                    description: roast
+                    description: `${roast} - The Roast Coach`
                 })
             });
 

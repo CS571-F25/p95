@@ -1,4 +1,4 @@
-import { Container } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 import Section from "../../components/Section";
 import ParagraphBlock from "../../components/ParagraphBlock";
 
@@ -25,6 +25,28 @@ export default function AboutMe() {
             "Some activity data from this app may be sent to Claude (an AI service) for processing or analysis. No personal athlete information is shared—only activity details such as workouts, distances, times, and other public activity metrics."
           ]}
         />
+      </Section>
+
+      <Section title="Donation">
+        <ParagraphBlock
+          paragraphs={[
+            "If Roast Coach made you laugh or kept your workouts fun, consider buying me a chocolate milk via Venmo.",
+            "Donations help cover the costs of running the Claude AI API that powers the roasts and keeps the app alive."
+          ]}
+        />
+        <Button
+          href="https://venmo.com/?txn=pay&recipients=carterbunn&note=Support%20Roast%20Coach"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
+          style={{
+            backgroundColor: "#FC4C02",
+            border: "2px solid #FC4C02",
+            color: "#FFFFFF",
+          }}
+        >
+          Donate with Venmo
+        </Button>
       </Section>
 
     </Container>

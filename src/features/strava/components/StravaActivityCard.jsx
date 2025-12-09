@@ -1,3 +1,4 @@
+import PRBadge from '../../../components/PRBadge';
 import { formatTime, formatDistance } from '../../../utils'
 
 export default function StravaActivityCard(props) {
@@ -7,6 +8,7 @@ export default function StravaActivityCard(props) {
       <div style={styles.cardHeader}>
         <h2 style={styles.cardTitle}>
           {props.name}
+          {props.isPR && <PRBadge type="gold" size="small" />}
         </h2>
         <div style={{ fontSize: '0.75em', opacity: 0.9 }}>
           {new Date(props.start_date).toLocaleDateString()} • {props.type}

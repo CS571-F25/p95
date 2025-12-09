@@ -1,5 +1,7 @@
 import StravaActivityRoast from "./StravaActivityRoast";
 import { formatTime, formatDistance, getPace } from '../../../utils'
+import Weather from "../../../components/Weather";
+import PRBadge from "../../../components/PRBadge";
 
 export default function StravaRoastActivityCard(props) {
     return (
@@ -12,8 +14,10 @@ export default function StravaRoastActivityCard(props) {
               <span style={styles.dateText}>{ new Date (props.start_date).toLocaleDateString()}</span>
             </div>
           </div>
-          <div style={styles.typeBadge}>
-            {props.type}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {props.average_temp && <Weather average_temp={props.average_temp} />}
+            <div style={styles.typeBadge}>{props.type}</div>
+            {props.isPR && <PRBadge type="gold" size="small" />}
           </div>
         </div>
       </div>
@@ -53,7 +57,6 @@ export default function StravaRoastActivityCard(props) {
 }
 
 const isMobile = window.innerWidth <= 768;
-
 
 const styles = {
   card: {
