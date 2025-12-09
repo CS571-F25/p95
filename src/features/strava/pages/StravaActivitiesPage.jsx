@@ -39,7 +39,7 @@ export default function StravaActivitiesPage() {
                 setLoading(true);
 
                 const res = await fetch(
-                    `https://strava-backend-eight.vercel.app/api/activities?per_page=10&page=${page}`,
+                    `https://strava-backend-eight.vercel.app/api/strava?per_page=10&page=${page}`,
                     {
                         credentials: 'include' // Send cookies with request
                     }
