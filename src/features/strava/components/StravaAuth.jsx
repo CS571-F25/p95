@@ -3,7 +3,7 @@ import { useStravaAuth } from '../context/StravaLoginStatusContext';
 import { Button, Container, Modal, Spinner } from 'react-bootstrap';
 
 export default function StravaAuth({setLoginVisible}) {
-  const { authData, login, logout } = useStravaAuth();
+  const { authData, login } = useStravaAuth();
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(true);
 
@@ -49,12 +49,12 @@ export default function StravaAuth({setLoginVisible}) {
 
     const BACKEND_URL = 'https://strava-backend-eight.vercel.app/api/strava';
 
-    // 1. Save to persistent storage after successful login
     try {
       const response = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -64,9 +64,8 @@ export default function StravaAuth({setLoginVisible}) {
 
       const data = await response.json();
       
-      // Save to persistent storage
-      localStorage.setItem('auth_data', JSON.stringify(data), false);
-      
+      // No longer storing in localStorage - tokens are in HTTP-only cookies now
+      // Only store the non-sensitive athlete data in context
       login(data);
       
       window.history.replaceState({}, document.title, window.location.pathname);

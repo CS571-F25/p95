@@ -33,19 +33,21 @@ export default function StravaActivitiesPage() {
 
     useEffect(() => {
         async function fetchActivities() {
-            if (!authData || !authData.access_token || !hasMore) return;
+            if (!authData || !hasMore) return;
 
             try {
                 setLoading(true);
 
                 const res = await fetch(
-                    `https://www.strava.com/api/v3/athlete/activities?per_page=10&page=${page}`,
+                    `https://strava-backend-eight.vercel.app/api/activities?per_page=10&page=${page}`,
                     {
-                        headers: {
-                            'Authorization': `Bearer ${authData.access_token}`
-                        }
+                        credentials: 'include' // Send cookies with request
                     }
                 );
+
+                if (!res.ok) {
+                    throw new Error(`Backend error: ${res.status}`);
+                }
 
                 const data = await res.json();
                 

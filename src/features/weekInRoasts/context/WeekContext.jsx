@@ -2,10 +2,12 @@ import { createContext, useContext, useState } from 'react';
 
 const WeekContext = createContext();
 
-export const WeekProvider = ({ children, authData }) => {
+export const WeekProvider = ({ children }) => {
   const [weeks, setWeeks] = useState({});
   const [currentWeek, setCurrentWeek] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState(null);
 
   const getWeek = async (startOfWeek) => {
     const key = startOfWeek.toISOString().slice(0, 10);
@@ -16,14 +18,33 @@ export const WeekProvider = ({ children, authData }) => {
       return weeks[key];
     }
     
+    // Don't fetch if rate limited
+    if (rateLimitInfo) {
+      return null;
+    }
+    
     // Fetch if not cached
     setLoading(true);
+    setError(null);
+    
     try {
-      const activities = await fetchActivitiesForWeek(startOfWeek, authData);
+      const result = await fetchActivitiesForWeek(startOfWeek);
+
+      // Handle rate limit
+      if (result.rateLimited) {
+        setRateLimitInfo(result.rateLimitInfo);
+        return null;
+      }
+
+      // Handle error
+      if (result.error) {
+        setError(result.error);
+        return null;
+      }
 
       const weekData = {
         startOfWeek,
-        activities
+        activities: result.activities
       };
 
       // Save to cache
@@ -39,12 +60,19 @@ export const WeekProvider = ({ children, authData }) => {
     }
   };
 
+  const clearRateLimit = () => {
+    setRateLimitInfo(null);
+  };
+
   return (
     <WeekContext.Provider
       value={{ 
         currentWeek,
         loading,
-        getWeek 
+        error,
+        rateLimitInfo,
+        getWeek,
+        clearRateLimit
       }}
     >
       {children}
@@ -54,8 +82,8 @@ export const WeekProvider = ({ children, authData }) => {
 
 export const useWeek = () => useContext(WeekContext);
 
-// Fetch activities from Strava API
-async function fetchActivitiesForWeek(startOfWeek, authData) {
+// Fetch activities from backend (which reads token from cookies)
+async function fetchActivitiesForWeek(startOfWeek) {
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
@@ -65,21 +93,39 @@ async function fetchActivitiesForWeek(startOfWeek, authData) {
 
   try {
     const response = await fetch(
-      `https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}`,
+      `https://strava-backend-eight.vercel.app/api/strava?after=${after}&before=${before}`,
       {
-        headers: {
-          Authorization: `Bearer ${authData.access_token}`,
-        },
+        credentials: 'include' // Send cookies with request
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`Strava API error: ${response.status}`);
+    // Handle rate limiting
+    if (response.status === 429) {
+      const data = await response.json();
+      return {
+        rateLimited: true,
+        rateLimitInfo: {
+          message: data.message,
+          resetAt: data.resetAt
+        }
+      };
     }
 
-    return await response.json();
+    if (!response.ok) {
+      return {
+        error: `Backend API error: ${response.status}`,
+        activities: []
+      };
+    }
+
+    const activities = await response.json();
+    return { activities };
+    
   } catch (error) {
     console.error('Error fetching activities:', error);
-    return [];
+    return {
+      error: error.message,
+      activities: []
+    };
   }
 }

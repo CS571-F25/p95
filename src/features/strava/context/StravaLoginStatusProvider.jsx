@@ -27,22 +27,40 @@ export default function StravaLoginStatusProvider({ children }) {
   };
 
 
-  const logout = () => {
+  const logout = async () => {
     const tempAuth = authData;
+    
+    // Clear server-side cookies
+    try {
+      await fetch('https://strava-backend-eight.vercel.app/api/strava/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error clearing cookies:', error);
+    }
+    
+    // Clear local state and localStorage
     setAuthData(null);
     setRoastName(null);
+    
+    // Remove auth_data (though it shouldn't have tokens anymore)
     localStorage.removeItem("auth_data");
-    localStorage.removeItem(`${tempAuth.athlete.id}_username`);
+    
+    if (tempAuth?.athlete?.id) {
+      localStorage.removeItem(`${tempAuth.athlete.id}_username`);
+    }
+    
     localStorage.removeItem(`heatLevel`);
 
     const keysToRemove = [];
 
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      const key = localStorage.key(i);
 
-        if (key && key.startsWith('strava_roast_') || key.startsWith('strava_week_roast_')) {
-              keysToRemove.push(key);
-        }
+      if (key && (key.startsWith('strava_roast_') || key.startsWith('strava_week_roast_'))) {
+        keysToRemove.push(key);
+      }
     }
         
     keysToRemove.forEach(key => localStorage.removeItem(key));
