@@ -1,11 +1,9 @@
 import { useState, useEffect, useContext } from 'react';
 import { Col, Row, Container } from 'react-bootstrap';
-import StravaLoginStatusContext from '../context/StravaLoginStatusContext';
 import StravaActivityCard from './StravaActivityCard';
 import { useWeek } from '../../weekInRoasts/context/WeekContext';
 
 export default function StravaWeekCalendar() {
-    const { authData } = useContext(StravaLoginStatusContext);
     const { currentWeek, loading, getWeek } = useWeek();
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
     const [weekRange, setWeekRange] = useState({ start_date: null, end_date: null });

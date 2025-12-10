@@ -100,7 +100,7 @@ export default function StravaAuth({setLoginVisible}) {
     >
       <Modal.Body>
         <Container style={{ textAlign: "center" }}>
-          <h4>Connect to Strava</h4>
+          <h1>Connect to Strava</h1>
           <p>Authenticate your Strava account to continue</p>
 
           <Button
