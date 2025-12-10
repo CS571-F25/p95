@@ -9,7 +9,7 @@ export default function StravaRoastActivityCard(props) {
       <div style={styles.cardHeader}>
         <div style={styles.cardHeaderTop}>
           <div style={{ flex: 1 }}>
-            <h2 style={styles.activityName}>{props.name}</h2>
+            <h1 style={styles.activityName}>{props.name}</h1>
             <div style={styles.dateContainer}>
               <span style={styles.dateText}>{ new Date (props.start_date).toLocaleDateString()}</span>
             </div>
